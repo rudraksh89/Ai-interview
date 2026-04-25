@@ -1,10 +1,9 @@
 import mongooese from "mongoose";
 
-
 const questionsSchema = new mongooese.Schema({
   question:String,
   difficulty:String,
-  timeLimt:String,
+  timeLimit:String,
   answer:String,
   feedback:String,
   score:{type:Number,default:0},
@@ -34,7 +33,15 @@ const interviewScehma = new mongooese.Schema({
   resumeText:{
     type:String,
   },
-  questions :{
-
+  questions :[questionsSchema],
+  finalScore : {type:Number,default:0},
+  status:{
+    type:String,
+    enum:["Completed","Incompleted"],
+    default:"Incompleted",
   }
 },{timestamps:true})
+
+const Interview = mongooese.model("Interview",interviewScehma);
+
+export default Interview;
