@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { motion } from "motion/react";
 import { FaUserTie, FaBriefcase, FaFileUpload, FaMicrophoneAlt, FaChartLine } from "react-icons/fa";
 import axios from "axios";
+import { useSelector, useDispatch } from 'react-redux';
+import { setuserData } from '../redux/userSlice'; // adjust path
 
 const ServerUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
 
 const Step1SetUp = ({ onstart }) => {
+  const {userData} = useSelector((state)=>state.user);
+  const dispatch = useDispatch();
   const [role, setrole] = useState("");
   const [experience, setexperience] = useState("");
   const [mode, setmode] = useState("Technical");
   const [resumefile, setresumefile] = useState(null);
+  const[loading,setloading] = useState(false);
   const [projects, setprojects] = useState([]);
   const [skills, setskills] = useState([]);
   const [resumetext, setresumetext] = useState("");
@@ -36,6 +41,23 @@ const Step1SetUp = ({ onstart }) => {
       setanalyzing(false);
     }
   };
+
+
+  const handleStart = async()=>{
+    setloading(true);
+    try{
+      const result = await axios.post(ServerUrl + "/api/interview/generate-questions",{role,experience,mode,resumetext,projects,skills},{withCredentials:true})
+      console.log(result.data);
+      if(userData){
+        dispatch(setuserData({...userData,credits:result.data.creditsLeft}))
+      }
+      setloading(false);
+      onstart(result.data);
+    }catch(error){
+      console.log(error);
+      setloading(false);
+    }
+  }
 
   return (
     <motion.div
@@ -169,13 +191,14 @@ const Step1SetUp = ({ onstart }) => {
             )}
 
             <motion.button
-              disabled={!role || !experience}
-              onClick={() => onstart({ role, experience, mode, skills, projects, resumetext })}
+            onClick={handleStart}
+              disabled={!role || !experience || loading}
+              
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
               className='w-full disabled:bg-gray-400 bg-green-600 hover:bg-green-700 text-white py-3 rounded-full text-lg font-semibold transition duration-300 shadow-md'
             >
-              Start Interview
+              {loading ? "Starting..." : "Start Interview"}
             </motion.button>
           </div>
         </motion.div>
